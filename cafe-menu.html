@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>카페 신메뉴 리스트</title>
+<style>
+  /* ============================================================
+     ★ 여기만 바꾸면 색상이 바뀌어요 (밝은 모드 기준)
+     ============================================================ */
+  :root {
+    --bg: #f5f6fa;          /* 페이지 배경색 */
+    --card: #ffffff;        /* 카드 배경색 */
+    --text: #222222;        /* 기본 글자색 */
+    --muted: #888888;       /* 흐린 글자색 */
+    --line: #dddddd;        /* 테두리 색 */
+    --accent: #4a6cf7;      /* 포인트 색 (버튼) */
+    --new: #e5484d;         /* NEW 표시 색 */
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171c; --card: #20232b; --text: #eeeeee;
+      --muted: #9a9fab; --line: #353a45; --accent: #7b93ff; --new: #ff6b70;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    background: var(--bg); color: var(--text);
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  }
+  h1 { margin: 0 0 12px; font-size: 22px; }
+
+  input, select, button {
+    font: inherit; color: var(--text); background: var(--card);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* 위쪽 알림 배너 */
+  .banner {
+    padding: 12px 14px; border-radius: 10px; margin-bottom: 14px;
+    background: var(--card); border: 2px solid var(--line); font-weight: bold;
+  }
+  .banner.has-new { border-color: var(--new); color: var(--new); }
+
+  .add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+  .add-row input[type="text"] { flex: 1 1 160px; }
+  .add-row input.price { flex: 0 1 110px; }
+  .section-title { margin: 14px 0 6px; font-size: 14px; color: var(--muted); }
+
+  /* 카페 카드: 넓은 화면 2열, 모바일 1열 */
+  .board { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+  @media (max-width: 700px) { .board { grid-template-columns: 1fr; } }
+
+  .cafe { background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 10px; }
+  .cafe.has-new { border-color: var(--new); }
+  .cafe-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .cafe-head h2 { margin: 0; font-size: 16px; flex: 1; word-break: break-all; }
+  .cafe-head button { padding: 4px 8px; font-size: 12px; }
+  .site { font-size: 12px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+
+  .menu { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+  .menu .name { flex: 1; word-break: break-all; }
+  .menu .meta { color: var(--muted); font-size: 12px; }
+  .badge { font-size: 11px; font-weight: bold; color: #fff; background: var(--new); border-radius: 10px; padding: 2px 7px; }
+  .del { padding: 0 6px; border: none; background: none; color: var(--muted); }
+  .empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>☕ 카페 신메뉴 리스트</h1>
+
+  <!-- 새 메뉴 알림 -->
+  <div class="banner" id="banner"></div>
+
+  <!-- 카페 등록 -->
+  <div class="section-title">① 카페 등록</div>
+  <form class="add-row" id="cafeForm">
+    <input type="text" id="cafeInput" maxlength="30" placeholder="카페 이름 (예: 동네카페)">
+    <button type="submit" class="primary">카페 추가</button>
+    <button type="button" id="presetBtn">프랜차이즈 카페 불러오기</button>
+  </form>
+
+  <!-- 신메뉴 등록 -->
+  <div class="section-title">② 신메뉴 등록</div>
+  <form class="add-row" id="menuForm">
+    <select id="cafeSelect"></select>
+    <input type="text" id="menuInput" maxlength="40" placeholder="신메뉴 이름">
+    <input type="text" class="price" id="priceInput" maxlength="12" placeholder="가격(선택)">
+    <button type="submit" class="primary">메뉴 추가</button>
+  </form>
+
+  <!-- 카페별 목록 -->
+  <div class="board" id="board"></div>
+
+<script>
+  // ============================================================
+  // ★ 여기만 바꾸면 설정이 바뀌어요
+  // ============================================================
+  const STORAGE_KEY = "cafe-menu-v1";   // 저장 이름 (바꾸면 기존 데이터가 안 보여요)
+
+  // 데이터 모양: [{ id, name, menus: [{ id, name, price, date, seen }] }]
+  let cafes = [];
+  try { cafes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { cafes = []; }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cafes)); } catch (e) {}
+  }
+
+  function today() {
+    const d = new Date();
+    return (d.getMonth() + 1) + "/" + d.getDate();
+  }
+  const isNew = (m) => !m.seen;   // 아직 '확인했어요'를 안 누른 메뉴 = NEW
+
+  const board = document.getElementById("board");
+  const cafeSelect = document.getElementById("cafeSelect");
+
+  function render() {
+    // 카페 선택칸 다시 채우기 (고르던 카페는 유지)
+    const prev = cafeSelect.value;
+    cafeSelect.innerHTML = "";
+    cafes.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c.id; o.textContent = c.name;
+      cafeSelect.appendChild(o);
+    });
+    if (cafes.some(c => String(c.id) === prev)) cafeSelect.value = prev;
+
+    // 위쪽 알림 문구
+    let newCount = 0;
+    cafes.forEach(c => c.menus.forEach(m => { if (isNew(m)) newCount++; }));
+    const banner = document.getElementById("banner");
+    banner.className = "banner" + (newCount ? " has-new" : "");
+    banner.textContent = cafes.length === 0
+      ? "먼저 카페를 등록해 보세요 ☕"
+      : newCount ? "🔔 확인하지 않은 새 메뉴가 " + newCount + "개 있어요!" : "✅ 새 메뉴를 모두 확인했어요";
+
+    // 카페 카드 그리기
+    board.innerHTML = "";
+    cafes.forEach(c => {
+      const hasNew = c.menus.some(isNew);
+      const card = document.createElement("div");
+      card.className = "cafe" + (hasNew ? " has-new" : "");
+
+      const head = document.createElement("div");
+      head.className = "cafe-head";
+      const h = document.createElement("h2");
+      h.textContent = c.name;                      // textContent라서 입력한 글이 코드로 실행되지 않아요
+      head.appendChild(h);
+
+      if (c.url) {                                 // 공식 사이트 링크 (새 탭으로 열려요)
+        const a = document.createElement("a");
+        a.className = "site"; a.textContent = "공식 사이트 ↗";
+        a.href = c.url; a.target = "_blank"; a.rel = "noopener noreferrer";
+        head.appendChild(a);
+      }
+      if (hasNew) {
+        const ok = document.createElement("button");
+        ok.textContent = "확인했어요";
+        ok.onclick = () => { c.menus.forEach(m => m.seen = true); save(); render(); };
+        head.appendChild(ok);
+      }
+      const delCafe = document.createElement("button");
+      delCafe.textContent = "카페 삭제";
+      delCafe.onclick = () => {
+        if (!confirm("'" + c.name + "'과(와) 메뉴 기록을 모두 지울까요?")) return;
+        cafes = cafes.filter(x => x.id !== c.id); save(); render();
+      };
+      head.appendChild(delCafe);
+      card.appendChild(head);
+
+      if (c.menus.length === 0) {
+        const em = document.createElement("div");
+        em.className = "empty";
+        em.textContent = "등록된 신메뉴 없음";
+        card.appendChild(em);
+      }
+      // 최근에 추가한 메뉴가 위로
+      c.menus.slice().reverse().forEach(m => {
+        const row = document.createElement("div");
+        row.className = "menu";
+
+        const name = document.createElement("span");
+        name.className = "name";
+        name.textContent = m.name;
+        row.appendChild(name);
+
+        if (isNew(m)) {
+          const b = document.createElement("span");
+          b.className = "badge"; b.textContent = "NEW";
+          row.appendChild(b);
+        }
+        const meta = document.createElement("span");
+        meta.className = "meta";
+        meta.textContent = (m.price ? m.price + " · " : "") + m.date;
+        row.appendChild(meta);
+
+        const del = document.createElement("button");
+        del.className = "del"; del.textContent = "✕"; del.title = "삭제";
+        del.onclick = () => { c.menus = c.menus.filter(x => x.id !== m.id); save(); render(); };
+        row.appendChild(del);
+
+        card.appendChild(row);
+      });
+      board.appendChild(card);
+    });
+  }
+
+  // ----- 카페 추가 -----
+  document.getElementById("cafeForm").onsubmit = (ev) => {
+    ev.preventDefault();
+    const input = document.getElementById("cafeInput");
+    const name = input.value.trim();
+    if (!name) return;
+    cafes.push({ id: Date.now() + Math.random(), name: name.slice(0, 30), menus: [] });
+    input.value = "";
+    save(); render();
+  };
+
+  // ----- 프랜차이즈 카페 불러오기 -----
+  // ★ 카페를 더 넣고 싶으면 아래에 { name: "이름", url: "주소" } 한 줄을 추가하세요.
+  // 주소가 열리지 않으면 카페 이름으로 검색해서 공식 주소로 고쳐 주세요.
+  const FRANCHISES = [
+    { name: "스타벅스",     url: "https://www.starbucks.co.kr" },
+    { name: "이디야커피",   url: "https://www.ediya.com" },
+    { name: "메가커피",     url: "https://www.mega-mgccoffee.com" },
+    { name: "컴포즈커피",   url: "https://composecoffee.com" },
+    { name: "빽다방",       url: "https://paikdabang.com" },
+    { name: "투썸플레이스", url: "https://www.twosome.co.kr" },
+    { name: "할리스",       url: "https://www.hollys.co.kr" }
+  ];
+  document.getElementById("presetBtn").onclick = () => {
+    let added = 0;
+    FRANCHISES.forEach(f => {
+      const exist = cafes.find(c => c.name === f.name);
+      if (exist) { if (!exist.url) exist.url = f.url; return; }   // 이미 있으면 건너뛰기
+      cafes.push({ id: Date.now() + Math.random(), name: f.name, url: f.url, menus: [] });
+      added++;
+    });
+    save(); render();
+    if (added === 0) alert("이미 모두 등록되어 있어요.");
+  };
+
+  // ----- 신메뉴 추가 -----
+  document.getElementById("menuForm").onsubmit = (ev) => {
+    ev.preventDefault();
+    const name = document.getElementById("menuInput").value.trim();
+    if (!name) return;
+    const cafe = cafes.find(c => String(c.id) === cafeSelect.value);
+    if (!cafe) { alert("먼저 카페를 등록해 주세요."); return; }
+    cafe.menus.push({
+      id: Date.now() + Math.random(),
+      name: name.slice(0, 40),
+      price: document.getElementById("priceInput").value.trim().slice(0, 12),
+      date: today(),
+      seen: false
+    });
+    document.getElementById("menuInput").value = "";
+    document.getElementById("priceInput").value = "";
+    save(); render();
+  };
+
+  render();
+</script>
+</body>
+</html>
