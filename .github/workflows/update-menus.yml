@@ -1,0 +1,42 @@
+# 카페 신메뉴를 매일 자동으로 확인해서 data/menus.json 을 갱신해요.
+# - 매일 한국 시간 오전 6시에 실행돼요 (GitHub 서버가 대신 실행 → 내 컴퓨터가 꺼져 있어도 OK)
+# - 내용이 바뀐 경우에만 커밋하고, 커밋이 생기면 Vercel이 자동으로 다시 배포해요.
+# - 지금 바로 돌려보려면: GitHub 저장소 → Actions → "카페 신메뉴 자동 갱신" → Run workflow
+name: 카페 신메뉴 자동 갱신
+
+on:
+  schedule:
+    - cron: "0 21 * * *"     # UTC 21:00 = 한국 시간 다음날 06:00 (★ 시간을 바꾸려면 여기)
+  workflow_dispatch:          # 수동 실행 버튼
+
+permissions:
+  contents: write             # data/menus.json 을 저장소에 커밋하기 위한 권한
+
+concurrency:
+  group: update-menus
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 공식 사이트에서 신메뉴 가져오기
+        run: node scripts/fetch-menus.mjs
+
+      - name: 바뀐 게 있으면 커밋
+        run: |
+          if [ -n "$(git status --porcelain data/menus.json)" ]; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/menus.json
+            git commit -m "자동 갱신: 카페 신메뉴 데이터"
+            git push
+          else
+            echo "변경 없음 — 커밋하지 않아요."
+          fi

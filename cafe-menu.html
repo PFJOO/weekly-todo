@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>카페 신메뉴 리스트</title>
+<title>프랜차이즈 카페 신메뉴</title>
 <style>
   /* ============================================================
      ★ 여기만 바꾸면 색상이 바뀌어요 (밝은 모드 기준)
@@ -12,258 +12,263 @@
     --bg: #f5f6fa;          /* 페이지 배경색 */
     --card: #ffffff;        /* 카드 배경색 */
     --text: #222222;        /* 기본 글자색 */
-    --muted: #888888;       /* 흐린 글자색 */
+    --muted: #777777;       /* 흐린 글자색 */
     --line: #dddddd;        /* 테두리 색 */
-    --accent: #4a6cf7;      /* 포인트 색 (버튼) */
+    --accent: #4a6cf7;      /* 포인트 색 (선택된 카페) */
     --new: #e5484d;         /* NEW 표시 색 */
+    --warn: #d98a00;        /* 추정·주의 표시 색 */
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #15171c; --card: #20232b; --text: #eeeeee;
-      --muted: #9a9fab; --line: #353a45; --accent: #7b93ff; --new: #ff6b70;
+      --muted: #a0a5b0; --line: #353a45; --accent: #7b93ff; --new: #ff6b70; --warn: #f0b030;
     }
   }
 
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 16px;
+    margin: 0; padding: 16px; max-width: 1100px; margin-inline: auto;
     background: var(--bg); color: var(--text);
     font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   }
-  h1 { margin: 0 0 12px; font-size: 22px; }
-
-  input, select, button {
-    font: inherit; color: var(--text); background: var(--card);
-    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
-  }
-  button { cursor: pointer; }
-  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  h1 { margin: 0 0 4px; font-size: 22px; }
+  .sub { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  button { font: inherit; color: var(--text); cursor: pointer; }
 
   /* 위쪽 알림 배너 */
-  .banner {
-    padding: 12px 14px; border-radius: 10px; margin-bottom: 14px;
-    background: var(--card); border: 2px solid var(--line); font-weight: bold;
-  }
-  .banner.has-new { border-color: var(--new); color: var(--new); }
+  .banner { padding: 12px 14px; border-radius: 10px; margin-bottom: 14px; background: var(--card);
+            border: 2px solid var(--line); font-size: 14px; }
+  .banner.has-new { border-color: var(--new); }
+  .banner b { color: var(--new); }
 
-  .add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
-  .add-row input[type="text"] { flex: 1 1 160px; }
-  .add-row input.price { flex: 0 1 110px; }
-  .section-title { margin: 14px 0 6px; font-size: 14px; color: var(--muted); }
+  /* 카페 선택 버튼 */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .chip { position: relative; padding: 9px 14px; border-radius: 20px; border: 2px solid var(--line); background: var(--card); }
+  .chip.active { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .chip .cnt { font-size: 12px; opacity: .8; margin-left: 4px; }
+  .chip .dot { position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--new); }
 
-  /* 카페 카드: 넓은 화면 2열, 모바일 1열 */
-  .board { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
-  @media (max-width: 700px) { .board { grid-template-columns: 1fr; } }
+  /* 선택한 카페 안내 */
+  .panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .panel-head h2 { margin: 0; font-size: 19px; }
+  .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid; white-space: nowrap; }
+  .tag.official { color: var(--accent); border-color: var(--accent); }
+  .tag.est { color: var(--warn); border-color: var(--warn); }
+  .tag.none { color: var(--muted); border-color: var(--muted); }
+  .note { font-size: 13px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+  .site { font-size: 13px; color: var(--accent); }
+  .alert { padding: 10px 12px; border-radius: 8px; border: 1px solid var(--warn); color: var(--warn); font-size: 13px; margin-bottom: 10px; }
+  .tools { display: flex; gap: 6px; margin: 8px 0 12px; }
+  .tools button { padding: 5px 12px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); font-size: 13px; }
+  .tools button.active { border-color: var(--accent); color: var(--accent); font-weight: bold; }
 
-  .cafe { background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 10px; }
-  .cafe.has-new { border-color: var(--new); }
-  .cafe-head { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-  .cafe-head h2 { margin: 0; font-size: 16px; flex: 1; word-break: break-all; }
-  .cafe-head button { padding: 4px 8px; font-size: 12px; }
-  .site { font-size: 12px; color: var(--accent); text-decoration: none; white-space: nowrap; }
-
-  .menu { display: flex; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .menu .name { flex: 1; word-break: break-all; }
-  .menu .meta { color: var(--muted); font-size: 12px; }
-  .badge { font-size: 11px; font-weight: bold; color: #fff; background: var(--new); border-radius: 10px; padding: 2px 7px; }
-  .del { padding: 0 6px; border: none; background: none; color: var(--muted); }
-  .empty { color: var(--muted); font-size: 13px; }
+  /* 메뉴 카드 */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+  .item { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+  .item .pic { aspect-ratio: 1 / 1; background: var(--line); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 28px; }
+  .item .pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .item .body { padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+  .item .name { font-weight: bold; font-size: 14px; word-break: keep-all; }
+  .item .en { font-size: 12px; color: var(--muted); }
+  .item .cat { font-size: 12px; color: var(--muted); }
+  .item .desc { font-size: 12px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .badges { display: flex; flex-wrap: wrap; gap: 4px; }
+  .badge { font-size: 11px; font-weight: bold; color: #fff; background: var(--accent); border-radius: 10px; padding: 2px 7px; }
+  .badge.fresh { background: var(--new); }
+  .badge.est { background: var(--warn); }
+  .empty { padding: 28px 12px; text-align: center; color: var(--muted); font-size: 14px; background: var(--card); border: 1px dashed var(--line); border-radius: 10px; }
+  .foot { margin-top: 18px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
-  <h1>☕ 카페 신메뉴 리스트</h1>
+  <h1>☕ 프랜차이즈 카페 신메뉴</h1>
+  <p class="sub" id="updated">불러오는 중...</p>
 
-  <!-- 새 메뉴 알림 -->
   <div class="banner" id="banner"></div>
 
-  <!-- 카페 등록 -->
-  <div class="section-title">① 카페 등록</div>
-  <form class="add-row" id="cafeForm">
-    <input type="text" id="cafeInput" maxlength="30" placeholder="카페 이름 (예: 동네카페)">
-    <button type="submit" class="primary">카페 추가</button>
-    <button type="button" id="presetBtn">프랜차이즈 카페 불러오기</button>
-  </form>
+  <!-- 카페 선택: 누르면 바로 그 카페의 신메뉴가 보여요 -->
+  <div class="chips" id="chips"></div>
 
-  <!-- 신메뉴 등록 -->
-  <div class="section-title">② 신메뉴 등록</div>
-  <form class="add-row" id="menuForm">
-    <select id="cafeSelect"></select>
-    <input type="text" id="menuInput" maxlength="40" placeholder="신메뉴 이름">
-    <input type="text" class="price" id="priceInput" maxlength="12" placeholder="가격(선택)">
-    <button type="submit" class="primary">메뉴 추가</button>
-  </form>
+  <div id="panel"></div>
 
-  <!-- 카페별 목록 -->
-  <div class="board" id="board"></div>
+  <p class="foot">
+    · 신메뉴 정보는 각 카페 <b>공식 사이트</b>에서 매일 자동으로 가져와요. 사이트가 바뀌면 일시적으로 못 가져올 수 있어요.<br>
+    · 출시일·가격·판매 매장은 카페마다 달라요. 주문 전에 공식 앱이나 매장에서 꼭 확인해 주세요.
+  </p>
 
 <script>
   // ============================================================
   // ★ 여기만 바꾸면 설정이 바뀌어요
   // ============================================================
-  const STORAGE_KEY = "cafe-menu-v1";   // 저장 이름 (바꾸면 기존 데이터가 안 보여요)
+  const DATA_URL = "data/menus.json";   // 자동 수집 프로그램이 매일 갱신하는 파일
+  const FRESH_DAYS = 7;                 // 이 기간 안에 올라온(출시된) 메뉴에 '새로 올라옴'을 붙여요
+  const RECENT_DAYS = 30;               // '최근 30일 출시' 보기 기간
+  const LAST_KEY = "cafe-last-brand";   // 마지막으로 본 카페 기억용 (저장이 막혀도 괜찮아요)
 
-  // 데이터 모양: [{ id, name, menus: [{ id, name, price, date, seen }] }]
-  let cafes = [];
-  try { cafes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { cafes = []; }
-  function save() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cafes)); } catch (e) {}
+  let data = null;
+  let current = null;       // 지금 선택된 카페 id
+  let recentOnly = false;   // '최근 출시만' 보기 여부
+
+  const $ = (id) => document.getElementById(id);
+  const MODE_TAG = {
+    official:    ["공식 신메뉴 표시", "official"],
+    estimated:   ["신메뉴 추정", "est"],
+    unsupported: ["자동 확인 불가", "none"],
+  };
+
+  // 오늘로부터 며칠 지났는지 (날짜 글자 "YYYY-MM-DD" → 숫자)
+  function daysAgo(dateStr) {
+    if (!dateStr) return null;
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const then = new Date(y, m - 1, d);
+    const now = new Date(); now.setHours(0, 0, 0, 0);
+    return Math.round((now - then) / 86400000);
+  }
+  // 새로 올라온 메뉴인가? (출시일이 최근이거나, 우리가 최근에 처음 발견했거나)
+  function isFresh(i) {
+    const a = daysAgo(i.released), b = daysAgo(i.firstSeen);
+    return (a !== null && a >= 0 && a <= FRESH_DAYS) || (b !== null && b >= 0 && b <= FRESH_DAYS);
+  }
+  const fmtDate = (s) => { const [, m, d] = s.split("-"); return Number(m) + "/" + Number(d); };
+
+  // 정렬: 출시일 최신순 → 처음 발견한 날 최신순 → 원래 순서
+  function sorted(items) {
+    return items.map((it, idx) => ({ it, idx })).sort((x, y) => {
+      const rx = x.it.released || "", ry = y.it.released || "";
+      if (rx !== ry) return ry.localeCompare(rx);
+      const fx = x.it.firstSeen || "", fy = y.it.firstSeen || "";
+      if (fx !== fy) return fy.localeCompare(fx);
+      return x.idx - y.idx;
+    }).map((o) => o.it);
   }
 
-  function today() {
-    const d = new Date();
-    return (d.getMonth() + 1) + "/" + d.getDate();
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;   // textContent라서 외부 글이 코드로 실행되지 않아요
+    return e;
   }
-  const isNew = (m) => !m.seen;   // 아직 '확인했어요'를 안 누른 메뉴 = NEW
 
-  const board = document.getElementById("board");
-  const cafeSelect = document.getElementById("cafeSelect");
+  // ----- 위쪽 배너 + 카페 버튼 -----
+  function renderTop() {
+    const fresh = data.brands.map((b) => ({ b, n: b.items.filter(isFresh).length })).filter((x) => x.n > 0);
+    const total = fresh.reduce((s, x) => s + x.n, 0);
+    const banner = $("banner");
+    banner.className = "banner" + (total ? " has-new" : "");
+    banner.textContent = "";
+    if (total) {
+      banner.append("🔔 최근 " + FRESH_DAYS + "일 안에 새로 올라온 메뉴가 ");
+      banner.append(Object.assign(el("b", "", total + "개")));
+      banner.append(" 있어요 — " + fresh.map((x) => x.b.name + " " + x.n).join(", "));
+    } else {
+      banner.textContent = "최근 " + FRESH_DAYS + "일 안에 새로 올라온 메뉴는 아직 없어요. 카페를 눌러 현재 신메뉴를 확인해 보세요.";
+    }
 
-  function render() {
-    // 카페 선택칸 다시 채우기 (고르던 카페는 유지)
-    const prev = cafeSelect.value;
-    cafeSelect.innerHTML = "";
-    cafes.forEach(c => {
-      const o = document.createElement("option");
-      o.value = c.id; o.textContent = c.name;
-      cafeSelect.appendChild(o);
+    const chips = $("chips");
+    chips.textContent = "";
+    data.brands.forEach((b) => {
+      const btn = el("button", "chip" + (b.id === current ? " active" : ""));
+      btn.append(b.name);
+      if (b.status !== "unsupported") btn.append(el("span", "cnt", String(b.items.length)));
+      if (b.items.some(isFresh)) btn.append(el("span", "dot"));
+      btn.onclick = () => { current = b.id; recentOnly = false; try { localStorage.setItem(LAST_KEY, b.id); } catch (e) {} render(); };
+      chips.append(btn);
     });
-    if (cafes.some(c => String(c.id) === prev)) cafeSelect.value = prev;
+  }
 
-    // 위쪽 알림 문구
-    let newCount = 0;
-    cafes.forEach(c => c.menus.forEach(m => { if (isNew(m)) newCount++; }));
-    const banner = document.getElementById("banner");
-    banner.className = "banner" + (newCount ? " has-new" : "");
-    banner.textContent = cafes.length === 0
-      ? "먼저 카페를 등록해 보세요 ☕"
-      : newCount ? "🔔 확인하지 않은 새 메뉴가 " + newCount + "개 있어요!" : "✅ 새 메뉴를 모두 확인했어요";
+  // ----- 선택한 카페의 신메뉴 -----
+  function renderPanel() {
+    const b = data.brands.find((x) => x.id === current);
+    const panel = $("panel");
+    panel.textContent = "";
+    if (!b) return;
 
-    // 카페 카드 그리기
-    board.innerHTML = "";
-    cafes.forEach(c => {
-      const hasNew = c.menus.some(isNew);
-      const card = document.createElement("div");
-      card.className = "cafe" + (hasNew ? " has-new" : "");
+    const head = el("div", "panel-head");
+    head.append(el("h2", "", b.name));
+    const [label, cls] = MODE_TAG[b.mode] || MODE_TAG.unsupported;
+    head.append(el("span", "tag " + cls, label));
+    const a = el("a", "site", "공식 사이트에서 보기 ↗");
+    a.href = b.site; a.target = "_blank"; a.rel = "noopener noreferrer";
+    head.append(a);
+    panel.append(head);
+    panel.append(el("p", "note", b.note));
 
-      const head = document.createElement("div");
-      head.className = "cafe-head";
-      const h = document.createElement("h2");
-      h.textContent = c.name;                      // textContent라서 입력한 글이 코드로 실행되지 않아요
-      head.appendChild(h);
+    if (b.status === "error") {
+      panel.append(el("div", "alert", "⚠ 이번 갱신에서 공식 사이트를 읽지 못했어요. 마지막으로 성공한 목록을 보여드려요. (" + (b.error || "원인 불명") + ")"));
+    }
+    if (b.status === "unsupported") {
+      panel.append(el("div", "empty", "이 카페는 신메뉴를 자동으로 확인할 수 없어요. 위의 '공식 사이트에서 보기'로 직접 확인해 주세요."));
+      return;
+    }
 
-      if (c.url) {                                 // 공식 사이트 링크 (새 탭으로 열려요)
-        const a = document.createElement("a");
-        a.className = "site"; a.textContent = "공식 사이트 ↗";
-        a.href = c.url; a.target = "_blank"; a.rel = "noopener noreferrer";
-        head.appendChild(a);
-      }
-      if (hasNew) {
-        const ok = document.createElement("button");
-        ok.textContent = "확인했어요";
-        ok.onclick = () => { c.menus.forEach(m => m.seen = true); save(); render(); };
-        head.appendChild(ok);
-      }
-      const delCafe = document.createElement("button");
-      delCafe.textContent = "카페 삭제";
-      delCafe.onclick = () => {
-        if (!confirm("'" + c.name + "'과(와) 메뉴 기록을 모두 지울까요?")) return;
-        cafes = cafes.filter(x => x.id !== c.id); save(); render();
-      };
-      head.appendChild(delCafe);
-      card.appendChild(head);
-
-      if (c.menus.length === 0) {
-        const em = document.createElement("div");
-        em.className = "empty";
-        em.textContent = "등록된 신메뉴 없음";
-        card.appendChild(em);
-      }
-      // 최근에 추가한 메뉴가 위로
-      c.menus.slice().reverse().forEach(m => {
-        const row = document.createElement("div");
-        row.className = "menu";
-
-        const name = document.createElement("span");
-        name.className = "name";
-        name.textContent = m.name;
-        row.appendChild(name);
-
-        if (isNew(m)) {
-          const b = document.createElement("span");
-          b.className = "badge"; b.textContent = "NEW";
-          row.appendChild(b);
-        }
-        const meta = document.createElement("span");
-        meta.className = "meta";
-        meta.textContent = (m.price ? m.price + " · " : "") + m.date;
-        row.appendChild(meta);
-
-        const del = document.createElement("button");
-        del.className = "del"; del.textContent = "✕"; del.title = "삭제";
-        del.onclick = () => { c.menus = c.menus.filter(x => x.id !== m.id); save(); render(); };
-        row.appendChild(del);
-
-        card.appendChild(row);
+    // 출시일이 있는 카페만 '최근 출시' 보기 제공
+    const hasDates = b.items.some((i) => i.released);
+    if (hasDates) {
+      const tools = el("div", "tools");
+      [["전체 신메뉴 " + b.items.length, false],
+       ["최근 " + RECENT_DAYS + "일 출시", true]].forEach(([text, flag]) => {
+        const t = el("button", flag === recentOnly ? "active" : "", text);
+        t.onclick = () => { recentOnly = flag; renderPanel(); };
+        tools.append(t);
       });
-      board.appendChild(card);
+      panel.append(tools);
+    }
+
+    let items = sorted(b.items);
+    if (recentOnly) items = items.filter((i) => { const d = daysAgo(i.released); return d !== null && d >= 0 && d <= RECENT_DAYS; });
+
+    if (items.length === 0) {
+      panel.append(el("div", "empty", recentOnly ? "최근 " + RECENT_DAYS + "일 안에 출시된 신메뉴가 없어요." : "지금 공식 사이트에 표시된 신메뉴가 없어요."));
+      return;
+    }
+
+    const grid = el("div", "grid");
+    items.forEach((i) => {
+      const card = el("div", "item");
+      const pic = el("div", "pic");
+      if (i.image && /^https:\/\//.test(i.image)) {
+        const img = document.createElement("img");
+        img.src = i.image; img.alt = i.name; img.loading = "lazy";
+        img.onerror = () => { pic.textContent = "☕"; };   // 사진이 안 열리면 컵 모양으로 대신해요
+        pic.append(img);
+      } else { pic.textContent = "☕"; }
+      card.append(pic);
+
+      const body = el("div", "body");
+      const badges = el("div", "badges");
+      if (isFresh(i)) badges.append(el("span", "badge fresh", "새로 올라옴"));
+      badges.append(el("span", b.mode === "estimated" ? "badge est" : "badge", b.mode === "estimated" ? "신메뉴 추정" : "공식 NEW"));
+      body.append(badges);
+      body.append(el("div", "name", i.name));
+      if (i.en) body.append(el("div", "en", i.en));
+      const meta = [i.category, i.released ? fmtDate(i.released) + (b.mode === "estimated" ? " 등록" : " 출시") : ""].filter(Boolean).join(" · ");
+      if (meta) body.append(el("div", "cat", meta));
+      if (i.desc) body.append(el("div", "desc", i.desc));
+      card.append(body);
+      grid.append(card);
     });
+    panel.append(grid);
   }
 
-  // ----- 카페 추가 -----
-  document.getElementById("cafeForm").onsubmit = (ev) => {
-    ev.preventDefault();
-    const input = document.getElementById("cafeInput");
-    const name = input.value.trim();
-    if (!name) return;
-    cafes.push({ id: Date.now() + Math.random(), name: name.slice(0, 30), menus: [] });
-    input.value = "";
-    save(); render();
-  };
+  function render() { renderTop(); renderPanel(); }
 
-  // ----- 프랜차이즈 카페 불러오기 -----
-  // ★ 카페를 더 넣고 싶으면 아래에 { name: "이름", url: "주소" } 한 줄을 추가하세요.
-  // 주소가 열리지 않으면 카페 이름으로 검색해서 공식 주소로 고쳐 주세요.
-  const FRANCHISES = [
-    { name: "스타벅스",     url: "https://www.starbucks.co.kr" },
-    { name: "이디야커피",   url: "https://www.ediya.com" },
-    { name: "메가커피",     url: "https://www.mega-mgccoffee.com" },
-    { name: "컴포즈커피",   url: "https://composecoffee.com" },
-    { name: "빽다방",       url: "https://paikdabang.com" },
-    { name: "투썸플레이스", url: "https://www.twosome.co.kr" },
-    { name: "할리스",       url: "https://www.hollys.co.kr" }
-  ];
-  document.getElementById("presetBtn").onclick = () => {
-    let added = 0;
-    FRANCHISES.forEach(f => {
-      const exist = cafes.find(c => c.name === f.name);
-      if (exist) { if (!exist.url) exist.url = f.url; return; }   // 이미 있으면 건너뛰기
-      cafes.push({ id: Date.now() + Math.random(), name: f.name, url: f.url, menus: [] });
-      added++;
+  // ----- 시작: 데이터 불러오기 -----
+  fetch(DATA_URL, { cache: "no-store" })
+    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then((j) => {
+      data = j;
+      const t = new Date(j.generatedAt);
+      $("updated").textContent = "마지막 확인: " + t.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · 매일 자동 갱신";
+      let last = null;
+      try { last = localStorage.getItem(LAST_KEY); } catch (e) {}
+      current = data.brands.some((b) => b.id === last) ? last : (data.brands.find((b) => b.items.length) || data.brands[0]).id;
+      render();
+    })
+    .catch(() => {
+      $("updated").textContent = "";
+      $("banner").textContent = "신메뉴 데이터를 불러오지 못했어요. 파일을 더블클릭해서 연 경우라면, 폴더의 '시작.bat'으로 실행하거나 배포된 주소로 열어 주세요.";
     });
-    save(); render();
-    if (added === 0) alert("이미 모두 등록되어 있어요.");
-  };
-
-  // ----- 신메뉴 추가 -----
-  document.getElementById("menuForm").onsubmit = (ev) => {
-    ev.preventDefault();
-    const name = document.getElementById("menuInput").value.trim();
-    if (!name) return;
-    const cafe = cafes.find(c => String(c.id) === cafeSelect.value);
-    if (!cafe) { alert("먼저 카페를 등록해 주세요."); return; }
-    cafe.menus.push({
-      id: Date.now() + Math.random(),
-      name: name.slice(0, 40),
-      price: document.getElementById("priceInput").value.trim().slice(0, 12),
-      date: today(),
-      seen: false
-    });
-    document.getElementById("menuInput").value = "";
-    document.getElementById("priceInput").value = "";
-    save(); render();
-  };
-
-  render();
 </script>
 </body>
 </html>
