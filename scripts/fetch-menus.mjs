@@ -4,7 +4,7 @@
 //  - 실행 방법:  node scripts/fetch-menus.mjs   (Node.js 18 이상, 설치할 것 없음)
 //  - 지어낸 데이터는 없어요. 사이트에서 못 읽으면 "실패/지원 안 함"으로 표시해요.
 // ============================================================
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, unlink } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -216,18 +216,43 @@ const BRANDS = [
 ];
 
 // ---------- 실행 ----------
-async function main() {
+// 안전한 저장: 임시 파일에 쓴 뒤 이름을 바꿔요. 윈도우에서 EPERM/EBUSY 이면 잠깐 쉬고 다시 시도해요.
+async function saveAtomic(file, text) {
+  const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
+  try {
+    await writeFile(tmp, text, "utf8");
+    for (let i = 0; ; i++) {
+      try { await rename(tmp, file); return; }
+      catch (e) {
+        if (i >= 4 || (e.code !== "EPERM" && e.code !== "EBUSY")) throw e;
+        await sleep(100);
+      }
+    }
+  } catch (e) {
+    try { await unlink(tmp); } catch {}
+    throw e;
+  }
+}
+
+// 수집을 실행하고 { summary, changed } 를 돌려줘요. 오류는 throw 만 해요(출력·종료는 CLI 쪽에서).
+// onBrand(info): 카페 하나가 끝날 때마다 불러 줘요 (선택).
+export async function runCollector({ onBrand } = {}) {
   let prev = null;
   try { prev = JSON.parse(await readFile(OUT, "utf8")); } catch {}
   const firstRun = !prev;                       // 처음 실행이면 '지금 있는 메뉴'는 기준선(이미 있던 메뉴)으로 처리
   const today = todayKST();
   const now = new Date().toISOString();
   const brands = [];
+  const summary = [];
 
   for (const b of BRANDS) {
     const old = prev?.brands?.find((x) => x.id === b.id);
     const base = { id: b.id, name: b.name, site: b.site, mode: b.mode, note: b.note };
-    if (!b.run) { brands.push({ ...base, status: "unsupported", checkedAt: now, items: [] }); continue; }
+    if (!b.run) {
+      brands.push({ ...base, status: "unsupported", checkedAt: now, items: [] });
+      summary.push({ id: b.id, name: b.name, status: "unsupported", count: 0 });
+      continue;
+    }
 
     try {
       const found = await b.run();
@@ -242,10 +267,14 @@ async function main() {
         firstSeen: oldByKey.has(i.key) ? oldByKey.get(i.key).firstSeen : (firstRun ? null : today),
       }));
       brands.push({ ...base, status: "ok", checkedAt: now, lastOk: now, items });
-      console.log(`✔ ${b.name}: 신메뉴 ${items.length}개`);
+      const row = { id: b.id, name: b.name, status: "ok", count: items.length };
+      summary.push(row);
+      onBrand?.(row);
     } catch (e) {
-      console.error(`✘ ${b.name}: ${e.message}`);
       brands.push({ ...base, status: "error", error: e.message, checkedAt: now, lastOk: old?.lastOk || null, items: old?.items || [] });
+      const row = { id: b.id, name: b.name, status: "error", count: (old?.items || []).length, error: e.message };
+      summary.push(row);
+      onBrand?.(row);
     }
     await sleep(300);
   }
@@ -254,8 +283,29 @@ async function main() {
   // 내용이 같으면 시각만 바뀐 파일을 만들지 않도록, 비교용으로 시각을 뺀 글자를 비교해요.
   const strip = (o) => JSON.stringify(o, (k, v) => (k === "checkedAt" || k === "generatedAt" ? undefined : v));
   const next = { generatedAt: now, brands };
-  if (prev && strip(prev) === strip(next)) { console.log("변경 없음 — 파일을 그대로 둡니다."); return; }
-  await writeFile(OUT, JSON.stringify(next, null, 2) + "\n", "utf8");
-  console.log("저장 완료:", OUT);
+  if (prev && strip(prev) === strip(next)) return { summary, changed: false };
+  await saveAtomic(OUT, JSON.stringify(next, null, 2) + "\n");
+  return { summary, changed: true };
 }
-main().catch((e) => { console.error(e); process.exit(1); });
+
+// 터미널에서 직접 실행했을 때만 자동으로 돌려요 (다른 파일이 import 할 땐 실행하지 않아요).
+function isDirectRun() {
+  if (!process.argv[1]) return false;
+  const norm = (p) => (process.platform === "win32" ? p.toLowerCase() : p);
+  try { return norm(resolve(fileURLToPath(import.meta.url))) === norm(resolve(process.argv[1])); }
+  catch { return false; }
+}
+
+if (isDirectRun()) {
+  runCollector({
+    onBrand: (r) => {
+      if (r.status === "ok") console.log(`✔ ${r.name}: 신메뉴 ${r.count}개`);
+      else console.error(`✘ ${r.name}: ${r.error}`);
+    },
+  })
+    .then(({ changed }) => {
+      if (changed) console.log("저장 완료:", OUT);
+      else console.log("변경 없음 — 파일을 그대로 둡니다.");
+    })
+    .catch((e) => { console.error(e); process.exit(1); });
+}

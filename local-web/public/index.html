@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src https: data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<title>프랜차이즈 카페 신메뉴 (내 PC 버전)</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <a class="skip" href="#panel">메뉴 목록으로 바로 가기</a>
+
+  <header>
+    <h1><span aria-hidden="true">☕ </span>프랜차이즈 카페 신메뉴</h1>
+    <p class="hint">카페를 눌러 신메뉴를 확인하세요.</p>
+    <p class="sub" id="updated">불러오는 중...</p>
+  </header>
+
+  <!-- 서버가 꺼졌을 때 등 중요한 안내 (내용이 생기면 스크린리더가 바로 읽어줘요) -->
+  <div id="notice" class="notice" role="alert" hidden></div>
+
+  <!-- 갱신 버튼 영역 -->
+  <section class="refresh" aria-labelledby="refreshTitle">
+    <h2 id="refreshTitle" class="sr-only">신메뉴 갱신</h2>
+    <div class="refresh-row">
+      <button id="refreshBtn" class="btn" type="button" aria-describedby="refreshStatus">
+        <span class="spin" aria-hidden="true"></span>
+        <span id="refreshLabel">지금 최신으로 갱신</span>
+      </button>
+      <span id="refreshTimer" class="timer"></span>
+    </div>
+    <!-- 상태 변화는 이 한 줄만 스크린리더가 읽어줘요 -->
+    <p id="refreshStatus" class="status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <div id="refreshDetail" class="detail" hidden></div>
+  </section>
+
+  <!-- 카페 선택: 누르면 바로 그 카페의 신메뉴가 보여요 -->
+  <div class="chips" id="chips" role="group" aria-label="카페 선택"></div>
+
+  <div class="banner" id="banner" hidden></div>
+
+  <main id="panel" tabindex="-1" aria-label="선택한 카페의 신메뉴">
+    <div class="state-card" role="status"><span class="spin on" aria-hidden="true"></span><span>신메뉴를 불러오는 중이에요...</span></div>
+  </main>
+
+  <p class="foot">
+    · 신메뉴 정보는 각 카페 <b>공식 사이트</b>에서 가져와요. '지금 최신으로 갱신'은 내 컴퓨터의 인터넷으로 접속해요.<br>
+    · 공식 사이트가 바뀌면 일시적으로 못 가져올 수 있어요. 그땐 이전 목록을 그대로 보여 드려요.<br>
+    · 출시일·가격·판매 매장은 카페마다 달라요. 주문 전에 공식 앱이나 매장에서 꼭 확인해 주세요.<br>
+    · 브라우저에 "연결할 수 없음" 화면이 나오면 서버가 꺼진 거예요. <b>local-web 폴더의 start.bat</b>을 더블클릭해 주세요.<br>
+    · 이 화면에서 갱신하면 <b>data\menus.json</b> 파일이 바뀌어요. 그래서 '신메뉴갱신.bat'과 <b>동시에 실행하지 마세요</b>.
+  </p>
+
+  <noscript><p class="state-card">이 화면은 자바스크립트가 필요해요. 브라우저 설정에서 자바스크립트를 켜 주세요.</p></noscript>
+
+  <script src="app.js"></script>
+</body>
+</html>
