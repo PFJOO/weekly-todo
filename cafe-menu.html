@@ -93,7 +93,8 @@
   <div id="panel"></div>
 
   <p class="foot">
-    · 신메뉴 정보는 각 카페 <b>공식 사이트</b>에서 매일 자동으로 가져와요. 사이트가 바뀌면 일시적으로 못 가져올 수 있어요.<br>
+    · 신메뉴 정보는 각 카페 <b>공식 사이트</b>에서 3시간마다 자동으로 확인해요. 사이트가 바뀌면 일시적으로 못 가져올 수 있어요.<br>
+    · 투썸플레이스·컴포즈커피는 공식 사이트가 클라우드 서버의 접속을 막아서, 내 PC에서 갱신할 때만 최신이 돼요.<br>
     · 출시일·가격·판매 매장은 카페마다 달라요. 주문 전에 공식 앱이나 매장에서 꼭 확인해 주세요.
   </p>
 
@@ -260,7 +261,7 @@
     .then((j) => {
       data = j;
       const t = new Date(j.generatedAt);
-      $("updated").textContent = "마지막 확인: " + t.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · 매일 자동 갱신";
+      $("updated").textContent = "신메뉴 목록이 마지막으로 바뀐 때: " + t.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · 3시간마다 자동 확인";
       let last = null;
       try { last = localStorage.getItem(LAST_KEY); } catch (e) {}
       current = data.brands.some((b) => b.id === last) ? last : (data.brands.find((b) => b.items.length) || data.brands[0]).id;

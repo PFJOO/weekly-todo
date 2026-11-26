@@ -337,7 +337,8 @@ export async function runCollector({ onBrand } = {}) {
 
   await mkdir(dirname(OUT), { recursive: true });
   // 내용이 같으면 시각만 바뀐 파일을 만들지 않도록, 비교용으로 시각을 뺀 글자를 비교해요.
-  const strip = (o) => JSON.stringify(o, (k, v) => (k === "checkedAt" || k === "generatedAt" ? undefined : v));
+  // checkedAt/lastOk 는 확인할 때마다 달라지는 시각이라 비교에서 빼요. (그래야 신메뉴가 실제로 바뀐 때만 저장·배포돼요)
+  const strip = (o) => JSON.stringify(o, (k, v) => (k === "checkedAt" || k === "generatedAt" || k === "lastOk" ? undefined : v));
   const next = { generatedAt: now, brands };
   if (prev && strip(prev) === strip(next)) return { summary, changed: false };
   await saveAtomic(OUT, JSON.stringify(next, null, 2) + "\n");
