@@ -195,7 +195,8 @@
     panel.append(el("p", "note", b.note));
 
     if (b.status === "error") {
-      panel.append(el("div", "alert", "⚠ 이번 갱신에서 공식 사이트를 읽지 못했어요. 마지막으로 성공한 목록을 보여드려요. (" + (b.error || "원인 불명") + ")"));
+      const when = b.lastOk ? new Date(b.lastOk).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) : "기록 없음";
+      panel.append(el("div", "alert", "⚠ 최근 자동 갱신에서 공식 사이트를 읽지 못했어요. 아래는 " + when + "에 마지막으로 확인한 목록이라 최신과 다를 수 있어요. (" + (b.error || "원인 불명") + ")"));
     }
     if (b.status === "unsupported") {
       panel.append(el("div", "empty", "이 카페는 신메뉴를 자동으로 확인할 수 없어요. 위의 '공식 사이트에서 보기'로 직접 확인해 주세요."));
