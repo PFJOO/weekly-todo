@@ -14,7 +14,7 @@ echo To stop, close this window.
 echo.
 
 rem Open the browser after 2 seconds (gives the server time to start)
-start "" /b powershell -NoProfile -Command "Start-Sleep 2; Start-Process 'http://localhost:5000/%%EC%%A3%%BC%%EA%%B0%%84-todo.html'"
+start "" /b powershell -NoProfile -Command "Start-Sleep 2; Start-Process 'http://localhost:5000/'"
 
 python -m http.server 5000 --bind 127.0.0.1
 if errorlevel 1 (
