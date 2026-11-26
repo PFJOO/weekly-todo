@@ -196,6 +196,59 @@ async function mega() {
   return items;
 }
 
+// 컴포즈커피: 공식 NEW 표시도 등록일도 없어요. 대신 메뉴마다 붙는 '등록 번호(item_srl)'가
+// 새로 등록할수록 커져서, 번호가 큰(=최근 등록된) 메뉴를 '신메뉴로 추정'해요.
+const COMPOSE_LATEST_COUNT = 12;   // ★ 상위 몇 개를 신메뉴로 볼지 (바꾸면 개수가 달라져요)
+const COMPOSE_CATEGORIES = [       // 컴포즈 메뉴 카테고리 번호와 이름
+  [301298, "추천메뉴"], [303364, "커피ㆍ콜드브루"], [303365, "베버리지"], [303366, "프라페ㆍ스무디"],
+  [303367, "밀크쉐이크"], [303368, "에이드ㆍ주스"], [303369, "티"], [308857, "푸드ㆍ디저트"], [303371, "아이스크림"],
+];
+async function compose() {
+  const base = "https://composecoffee.com";
+  const listUrl = (c) => `${base}/index.php?mid=compose&act=dispCafemenuGalleryList&category_srl=${c}`;
+  const all = [];
+  let okPages = 0;
+  for (const [code, catName] of COMPOSE_CATEGORIES) {
+    try {
+      const html = await (await http(listUrl(code))).text();
+      okPages++;
+      // 메뉴 하나는 <a href="...item_srl=번호" class="cafemenu-menu-item"> ... </a> 모양이에요.
+      // (번호가 class 앞쪽 주소에 있어서, 한 칸으로 묶어서 읽어야 번호가 어긋나지 않아요)
+      const itemRe = /item_srl=(\d+)"[^>]*class="cafemenu-menu-item">([\s\S]*?)<\/a>/g;
+      for (const m of html.matchAll(itemRe)) {
+        const srl = +m[1];
+        const name = decode((m[2].match(/cafemenu-menu-name">([\s\S]*?)<\/div>/) || [])[1]);
+        const img = (m[2].match(/<img src="([^"]+)"/) || [])[1] || "";
+        if (srl && name) all.push({ srl, name, img, catName, code });
+      }
+    } catch { /* 카테고리 하나가 실패해도 나머지는 계속해요 */ }
+    await sleep(300);
+  }
+  if (okPages === 0) throw new Error("컴포즈 메뉴 페이지를 하나도 읽지 못했어요");
+  if (all.length === 0) throw new Error("메뉴 목록을 찾지 못했어요 (사이트 구조가 바뀐 것 같아요)");
+
+  // 같은 메뉴의 HOT(H-)/ICE(I-) 버전은 하나로 합치고, 번호가 가장 큰 것을 기준으로 삼아요.
+  const merged = new Map();
+  for (const m of all) {
+    const name = m.name.replace(/^[HI]-\s*/, "");
+    const cur = merged.get(name);
+    if (!cur || m.srl > cur.srl) merged.set(name, { ...m, name });
+  }
+  return [...merged.values()]
+    .sort((a, b) => b.srl - a.srl)
+    .slice(0, COMPOSE_LATEST_COUNT)
+    .map((m) => ({
+      key: "cp-" + m.name,
+      name: m.name,
+      en: "",
+      desc: "",
+      image: m.img ? encodeURI(m.img.startsWith("http") ? m.img : base + m.img) : "",
+      category: m.catName,
+      released: null,
+      url: listUrl(m.code),
+    }));
+}
+
 // ---------- 카페 목록 ----------
 // mode: official = 공식 신메뉴 표시를 읽음 / estimated = 추정 / unsupported = 자동 수집 불가
 const BRANDS = [
@@ -211,8 +264,8 @@ const BRANDS = [
     note: `공식 사이트에 신메뉴 표시가 없어요. 메뉴 이미지가 최근 ${RECENT_DAYS_FOR_ESTIMATE}일 안에 올라온 메뉴를 '신메뉴로 추정'해서 보여줘요. 실제와 다를 수 있어요.` },
   { id: "hollys", name: "할리스", site: "https://www.hollys.co.kr/menu/signature.do", mode: "unsupported", run: null,
     note: "공식 메뉴판에 신메뉴 표시가 없어서 자동으로 구분할 수 없어요. 공식 사이트에서 직접 확인해 주세요." },
-  { id: "compose", name: "컴포즈커피", site: "https://composecoffee.com", mode: "unsupported", run: null,
-    note: "공식 사이트가 자바스크립트로만 메뉴를 보여주고 읽을 수 있는 주소를 찾지 못했어요. 공식 사이트에서 직접 확인해 주세요." },
+  { id: "compose", name: "컴포즈커피", site: "https://composecoffee.com/index.php?mid=compose&act=dispCafemenuGalleryList&category_srl=301298", mode: "estimated", run: compose,
+    note: `공식 사이트에 신메뉴 표시와 등록일이 없어요. 메뉴마다 붙는 등록 번호가 큰(최근 등록된) 순서로 ${COMPOSE_LATEST_COUNT}개를 '신메뉴로 추정'해서 보여줘요. 실제와 다를 수 있어요.` },
 ];
 
 // ---------- 실행 ----------
@@ -261,10 +314,13 @@ export async function runCollector({ onBrand } = {}) {
         throw new Error("신메뉴가 0개로 읽혔어요 (사이트 구조 변경 가능성). 이전 목록을 유지해요.");
       }
       const oldByKey = new Map((old?.items || []).map((i) => [i.key, i]));
+      // 이 카페를 처음 수집하는 경우(파일 자체가 처음이거나, 새로 지원이 추가된 카페)는
+      // 지금 있는 메뉴를 '기존 메뉴'로 봐요. 안 그러면 전부 "오늘 새로 올라옴"으로 잘못 표시돼요.
+      const baseline = firstRun || !old || !old.lastOk;
       const items = found.map((i) => ({
         ...i,
-        // 처음 우리가 발견한 날. 첫 실행 때 이미 있던 메뉴는 null(= 기존 메뉴)
-        firstSeen: oldByKey.has(i.key) ? oldByKey.get(i.key).firstSeen : (firstRun ? null : today),
+        // 처음 우리가 발견한 날. 기준선으로 처리한 메뉴는 null(= 기존 메뉴)
+        firstSeen: oldByKey.has(i.key) ? oldByKey.get(i.key).firstSeen : (baseline ? null : today),
       }));
       brands.push({ ...base, status: "ok", checkedAt: now, lastOk: now, items });
       const row = { id: b.id, name: b.name, status: "ok", count: items.length };
