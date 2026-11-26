@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>주간 TODO 리스트</title>
+<style>
+  /* ============================================================
+     ★ 여기만 바꾸면 색상이 바뀌어요 (밝은 모드 기준)
+     ============================================================ */
+  :root {
+    --bg: #f5f6fa;          /* 페이지 배경색 */
+    --card: #ffffff;        /* 카드(요일 칸) 배경색 */
+    --text: #222222;        /* 기본 글자색 */
+    --muted: #888888;       /* 흐린 글자색 */
+    --line: #dddddd;        /* 테두리 색 */
+    --accent: #4a6cf7;      /* 포인트 색 (버튼, 진행 막대, 오늘 테두리) */
+    --high: #e5484d;        /* 중요도 '높음' 색 */
+    --mid: #d98a00;         /* 중요도 '보통' 색 */
+    --low: #2e9e5b;         /* 중요도 '낮음' 색 */
+  }
+  /* 시스템이 다크모드일 때 자동으로 적용되는 색상 */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15171c; --card: #20232b; --text: #eeeeee;
+      --muted: #9a9fab; --line: #353a45; --accent: #7b93ff;
+      --high: #ff6b70; --mid: #f0b030; --low: #4cc983;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px;
+    background: var(--bg); color: var(--text);
+    font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  }
+  h1 { margin: 0 0 12px; font-size: 22px; }
+
+  /* 입력줄 */
+  .add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .add-row input[type="text"] { flex: 1 1 220px; }
+  input, select, button {
+    font: inherit; color: var(--text); background: var(--card);
+    border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px;
+  }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* 주 이동 줄 */
+  .week-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 8px; }
+  #weekLabel { font-weight: bold; }
+
+  /* 진행률 */
+  .progress-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .bar { flex: 1 1 160px; height: 10px; background: var(--line); border-radius: 5px; overflow: hidden; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
+  /* 요일 칸: 넓은 화면 7열 → 중간 2열 → 모바일 1열 */
+  .board { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  @media (max-width: 1100px) { .board { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .board { grid-template-columns: 1fr; } }
+
+  .day {
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 10px; padding: 8px; min-height: 120px;
+  }
+  .day.today { border-color: var(--accent); }          /* 오늘 칸 강조 */
+  .day h2 { margin: 0 0 8px; font-size: 15px; }
+  .day h2 small { color: var(--muted); font-weight: normal; }
+
+  .item { display: flex; align-items: flex-start; gap: 6px; padding: 5px 0; border-top: 1px solid var(--line); }
+  .item .txt { flex: 1; word-break: break-all; font-size: 14px; }
+  .item.done .txt { text-decoration: line-through; color: var(--muted); }
+  .item .del { padding: 0 6px; border: none; background: none; color: var(--muted); }
+  .pri { font-size: 11px; padding: 2px 6px; border-radius: 10px; border: 1px solid; background: none; }
+  .pri.p3 { color: var(--high); border-color: var(--high); }
+  .pri.p2 { color: var(--mid);  border-color: var(--mid); }
+  .pri.p1 { color: var(--low);  border-color: var(--low); }
+  .empty { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+  <h1>📝 주간 TODO 리스트</h1>
+
+  <!-- 할 일 추가 -->
+  <form class="add-row" id="addForm">
+    <input type="text" id="textInput" maxlength="100" placeholder="할 일을 입력하세요 (최대 100자)">
+    <select id="daySelect"></select>
+    <select id="priSelect">
+      <option value="3">높음</option>
+      <option value="2" selected>보통</option>
+      <option value="1">낮음</option>
+    </select>
+    <button type="submit" class="primary">추가</button>
+  </form>
+
+  <!-- 주 이동 -->
+  <div class="week-row">
+    <button id="prevBtn">◀ 이전 주</button>
+    <span id="weekLabel"></span>
+    <button id="nextBtn">다음 주 ▶</button>
+    <button id="thisBtn">이번 주</button>
+  </div>
+
+  <!-- 진행률 -->
+  <div class="progress-wrap">
+    <div class="bar"><div id="barFill"></div></div>
+    <span id="progressText"></span>
+  </div>
+
+  <!-- 월~일 7칸 -->
+  <div class="board" id="board"></div>
+
+<script>
+  // ============================================================
+  // ★ 여기만 바꾸면 설정이 바뀌어요
+  // ============================================================
+  const STORAGE_KEY = "weekly-todo-v1";            // 저장 이름 (바꾸면 기존 데이터가 안 보여요)
+  const DAY_NAMES   = ["월","화","수","목","금","토","일"];
+  const PRI_LABEL   = { 3: "높음", 2: "보통", 1: "낮음" };  // 중요도 글자
+
+  // ----- 데이터 불러오기/저장 (저장이 막힌 환경에서도 오류 없이 동작) -----
+  let todos = [];
+  try { todos = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (e) { todos = []; }
+  function save() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(todos)); } catch (e) {}
+  }
+
+  // ----- 날짜 도우미 -----
+  // 날짜를 "YYYY-MM-DD" 글자로 바꾸기 (시간대 문제를 피하려고 직접 조립)
+  function fmt(d) {
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return d.getFullYear() + "-" + m + "-" + day;
+  }
+  // 어떤 날짜가 속한 주의 월요일 구하기 (주의 시작은 월요일)
+  function mondayOf(d) {
+    const r = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = (r.getDay() + 6) % 7;   // 월=0, 화=1, ... 일=6
+    r.setDate(r.getDate() - diff);
+    return r;
+  }
+  let weekStart = mondayOf(new Date());   // 지금 보고 있는 주의 월요일
+
+  function weekDates() {
+    return DAY_NAMES.map((_, i) => {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      return d;
+    });
+  }
+
+  // ----- 정렬 규칙 (바꾸고 싶으면 여기!) -----
+  // ① 미완료가 먼저 ② 중요도 높은 순 ③ 먼저 추가한 순
+  function sortRule(a, b) {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    if (a.priority !== b.priority) return b.priority - a.priority;
+    return a.id - b.id;
+  }
+
+  // ----- 화면 그리기 -----
+  const board = document.getElementById("board");
+
+  function render() {
+    const dates = weekDates();
+    const todayStr = fmt(new Date());
+
+    // 주 이동 줄 문구
+    const s = dates[0], e = dates[6];
+    document.getElementById("weekLabel").textContent =
+      (s.getMonth() + 1) + "월 " + s.getDate() + "일 ~ " + (e.getMonth() + 1) + "월 " + e.getDate() + "일";
+
+    // 요일 칸 만들기
+    board.innerHTML = "";
+    let total = 0, doneCount = 0;
+    dates.forEach((d, i) => {
+      const dateStr = fmt(d);
+      const day = document.createElement("div");
+      day.className = "day" + (dateStr === todayStr ? " today" : "");
+
+      const h = document.createElement("h2");
+      h.textContent = DAY_NAMES[i] + " ";
+      const sm = document.createElement("small");
+      sm.textContent = (d.getMonth() + 1) + "/" + d.getDate();
+      h.appendChild(sm);
+      day.appendChild(h);
+
+      const list = todos.filter(t => t.date === dateStr).sort(sortRule);
+      if (list.length === 0) {
+        const em = document.createElement("div");
+        em.className = "empty";
+        em.textContent = "할 일 없음";
+        day.appendChild(em);
+      }
+      list.forEach(t => {
+        total++; if (t.done) doneCount++;
+        const row = document.createElement("div");
+        row.className = "item" + (t.done ? " done" : "");
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = t.done;
+        cb.onchange = () => { t.done = cb.checked; save(); render(); };
+
+        const txt = document.createElement("span");
+        txt.className = "txt";
+        txt.textContent = t.text;            // textContent라서 입력한 글이 코드로 실행되지 않아요
+
+        const pri = document.createElement("button");
+        pri.className = "pri p" + t.priority;
+        pri.textContent = PRI_LABEL[t.priority];
+        pri.title = "누르면 중요도가 바뀌어요";
+        pri.onclick = () => {                // 높음(3) → 보통(2) → 낮음(1) → 높음(3)
+          t.priority = t.priority === 1 ? 3 : t.priority - 1;
+          save(); render();
+        };
+
+        const del = document.createElement("button");
+        del.className = "del";
+        del.textContent = "✕";
+        del.title = "삭제";
+        del.onclick = () => { todos = todos.filter(x => x.id !== t.id); save(); render(); };
+
+        row.append(cb, txt, pri, del);
+        day.appendChild(row);
+      });
+      board.appendChild(day);
+    });
+
+    // 진행률
+    const pct = total ? Math.round(doneCount / total * 100) : 0;
+    document.getElementById("barFill").style.width = pct + "%";
+    document.getElementById("progressText").textContent =
+      "이번 주 완료 " + doneCount + "/" + total + " (" + pct + "%)";
+  }
+
+  // ----- 요일 선택칸 채우기 -----
+  const daySelect = document.getElementById("daySelect");
+  DAY_NAMES.forEach((n, i) => {
+    const o = document.createElement("option");
+    o.value = i; o.textContent = n + "요일";
+    daySelect.appendChild(o);
+  });
+  daySelect.value = (new Date().getDay() + 6) % 7;   // 기본값: 오늘 요일
+
+  // ----- 할 일 추가 -----
+  document.getElementById("addForm").onsubmit = (ev) => {
+    ev.preventDefault();
+    const input = document.getElementById("textInput");
+    const text = input.value.trim();
+    if (!text) return;                                // 빈 내용은 추가 안 함
+    const d = weekDates()[Number(daySelect.value)];   // 지금 보는 주의 선택한 요일
+    todos.push({
+      id: Date.now() + Math.random(),
+      text: text.slice(0, 100),
+      date: fmt(d),
+      priority: Number(document.getElementById("priSelect").value),
+      done: false
+    });
+    input.value = "";
+    save(); render();
+  };
+
+  // ----- 주 이동 버튼 -----
+  function moveWeek(n) { weekStart.setDate(weekStart.getDate() + n * 7); render(); }
+  document.getElementById("prevBtn").onclick = () => moveWeek(-1);
+  document.getElementById("nextBtn").onclick = () => moveWeek(1);
+  document.getElementById("thisBtn").onclick = () => { weekStart = mondayOf(new Date()); render(); };
+
+  render();
+</script>
+</body>
+</html>
