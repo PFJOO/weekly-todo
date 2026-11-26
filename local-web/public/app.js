@@ -179,10 +179,24 @@ async function loadMenus() {
 function lastCheckedIso() {
   return (S.lastRun && S.lastRun.finishedAt) || S.generatedAt || (S.data && S.data.generatedAt) || null;
 }
+// ---------- 읽기 전용 웹 버전 (Vercel) ----------
+// 배포된 웹 버전은 서버(갱신 기능)가 없어요. /api/status 가 readOnly:true 를 알려주면
+// 갱신 버튼 영역과 '내 PC 전용' 안내를 숨기고, 웹 버전 안내를 보여줘요.
+// 내 PC 서버는 readOnly 를 보내지 않으니 이 코드는 실행되지 않아요.
+function applyReadOnly() {
+  S.readOnly = true;
+  const section = document.querySelector("section.refresh");
+  if (section) section.hidden = true;
+  document.querySelectorAll(".local-only").forEach((e) => { e.hidden = true; });
+  document.querySelectorAll(".web-only").forEach((e) => { e.hidden = false; });
+  document.title = "프랜차이즈 카페 신메뉴 (웹 버전)";
+}
+
 function renderUpdated() {
   const p = $("updated");
   const t = fmtDateTime(lastCheckedIso());
   if (!t) { setText(p, S.menusState === "loading" ? "불러오는 중..." : "마지막 확인 시각을 알 수 없어요"); return; }
+  if (S.readOnly) { setText(p, "신메뉴 목록이 마지막으로 바뀐 때: " + t + " · 3시간마다 자동 확인"); return; }   // 웹 버전: 이 시각은 '확인'이 아니라 '목록이 바뀐' 시각이에요
   let text = "마지막 확인: " + t;
   const saved = S.generatedAt || (S.data && S.data.generatedAt);
   const savedText = fmtDateTime(saved);
@@ -551,6 +565,7 @@ function startCooldown(sec) {
 // ----- 상태 읽기 -----
 function applyStatus(s) {
   if (!s || typeof s !== "object") return;
+  if (s.readOnly === true && !S.readOnly) applyReadOnly();
   S.generatedAt = typeof s.generatedAt === "string" ? s.generatedAt : null;
   S.lastRun = s.lastRun && typeof s.lastRun === "object" ? s.lastRun : null;
   const sec = Number(s.cooldownSeconds);

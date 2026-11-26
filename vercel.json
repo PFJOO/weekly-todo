@@ -1,0 +1,12 @@
+{
+  "redirects": [
+    { "source": "/mvp", "destination": "/mvp/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/mvp/", "destination": "/local-web/public/index.html" },
+    { "source": "/mvp/app.css", "destination": "/local-web/public/app.css" },
+    { "source": "/mvp/app.js", "destination": "/local-web/public/app.js" },
+    { "source": "/api/menus", "destination": "/data/menus.json" },
+    { "source": "/api/status", "destination": "/data/status.json" }
+  ]
+}
