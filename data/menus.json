@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-27T03:33:43.290Z",
+  "generatedAt": "2026-11-27T16:24:55.053Z",
   "brands": [
     {
       "id": "starbucks",
@@ -8,8 +8,8 @@
       "mode": "official",
       "note": "공식 사이트의 '신메뉴' 표시와 출시일을 그대로 가져와요.",
       "status": "ok",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
-      "lastOk": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
+      "lastOk": "2026-11-27T16:24:55.053Z",
       "items": [
         {
           "key": "sb-9200000006412",
@@ -617,61 +617,6 @@
           "firstSeen": null
         },
         {
-          "key": "sb-9300000006750",
-          "name": "SS 남산마루 단테 스트랩 텀블러 355ml",
-          "en": "",
-          "desc": "한국의 전통 회화와 남산 풍경을 담은 챰과, 한국 전통 매듭을 모티프로 현대적으로 풀어낸 SS 남산마루 단테 스트랩 텀블러 355ml입니다.",
-          "image": "https://image.istarbucks.co.kr/upload/store/skuimg/2026/11/%5B9300000006750%5D_20261124105913344.jpg",
-          "category": "지역/매장 특화",
-          "released": "2026-11-27",
-          "url": "https://www.starbucks.co.kr/menu/drink_list.do",
-          "firstSeen": "2026-11-27"
-        },
-        {
-          "key": "sb-9300000006749",
-          "name": "SS 남산마루 모카 텀블러 444ml",
-          "en": "",
-          "desc": "일월오봉도와 남산의 풍경을 모티프로 현대적으로 풀어낸 SS 남산마루 모카 텀블러 444ml입니다.",
-          "image": "https://image.istarbucks.co.kr/upload/store/skuimg/2026/11/%5B9300000006749%5D_20261124105558987.jpg",
-          "category": "지역/매장 특화",
-          "released": "2026-11-27",
-          "url": "https://www.starbucks.co.kr/menu/drink_list.do",
-          "firstSeen": "2026-11-27"
-        },
-        {
-          "key": "sb-9300000006748",
-          "name": "SS 단풍 마중 조이 텀블러 473ml",
-          "en": "",
-          "desc": "노랗게 물든 단풍이 아름다운 남산의 가을 풍경을 담아낸 SS 단풍 마중 조이 텀블러 473ml입니다.",
-          "image": "https://image.istarbucks.co.kr/upload/store/skuimg/2026/11/%5B9300000006748%5D_20261124105359027.jpg",
-          "category": "지역/매장 특화",
-          "released": "2026-11-27",
-          "url": "https://www.starbucks.co.kr/menu/drink_list.do",
-          "firstSeen": "2026-11-27"
-        },
-        {
-          "key": "sb-9300000006746",
-          "name": "SS 야경 달빛 조이 텀블러 473ml",
-          "en": "",
-          "desc": "남산 케이블카에서 바라본 서울 야경을 담아낸 SS 야경 달빛 조이 텀블러 473ml입니다.",
-          "image": "https://image.istarbucks.co.kr/upload/store/skuimg/2026/11/%5B9300000006746%5D_20261124104924872.jpg",
-          "category": "지역/매장 특화",
-          "released": "2026-11-27",
-          "url": "https://www.starbucks.co.kr/menu/drink_list.do",
-          "firstSeen": "2026-11-27"
-        },
-        {
-          "key": "sb-9300000006238",
-          "name": "광장마켓 에코백",
-          "en": "",
-          "desc": "[광장마켓 특화 MD] 광장시장의 활기찬 모습을 일러스트로 한눈에 담은 광장마켓 에코백입니다",
-          "image": "https://image.istarbucks.co.kr/upload/store/skuimg/2025/10/%5B9300000006238%5D_20251031095712191.jpg",
-          "category": "지역/매장 특화",
-          "released": "2025-11-06",
-          "url": "https://www.starbucks.co.kr/menu/drink_list.do",
-          "firstSeen": "2026-11-27"
-        },
-        {
           "key": "sb-9300000006904",
           "name": "남산마루 마그넷(Day)",
           "en": "",
@@ -735,8 +680,8 @@
       "mode": "official",
       "note": "공식 메뉴판에서 NEW 아이콘이 붙은 메뉴만 가져와요. 출시일은 공개되지 않아요.",
       "status": "ok",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
-      "lastOk": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
+      "lastOk": "2026-11-27T16:24:55.053Z",
       "items": [
         {
           "key": "ed-ICED 대추 수정과",
@@ -847,7 +792,7 @@
       "note": "공식 메뉴판의 'New' 배지가 붙은 메뉴만 가져와요. 굿즈(텀블러 등)는 뺐어요. 출시일은 공개되지 않아요.",
       "status": "error",
       "error": "HTTP 403 (https://mo.twosome.co.kr/mn/menuInfoListAjax.json)",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
       "lastOk": "2026-11-26T07:44:23.423Z",
       "items": [
         {
@@ -969,8 +914,8 @@
       "mode": "official",
       "note": "공식 사이트의 '신메뉴' 페이지 목록을 그대로 가져와요. 출시일은 공개되지 않아요.",
       "status": "ok",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
-      "lastOk": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
+      "lastOk": "2026-11-27T16:24:55.053Z",
       "items": [
         {
           "key": "pk-씨앗호떡라떼 (HOT)",
@@ -1146,8 +1091,8 @@
       "mode": "estimated",
       "note": "공식 사이트에 신메뉴 표시가 없어요. 메뉴 이미지가 최근 60일 안에 올라온 메뉴를 '신메뉴로 추정'해서 보여줘요. 실제와 다를 수 있어요.",
       "status": "ok",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
-      "lastOk": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
+      "lastOk": "2026-11-27T16:24:55.053Z",
       "items": [
         {
           "key": "mg-딥 초코 체리 프라페",
@@ -1224,7 +1169,7 @@
       "mode": "unsupported",
       "note": "공식 메뉴판에 신메뉴 표시가 없어서 자동으로 구분할 수 없어요. 공식 사이트에서 직접 확인해 주세요.",
       "status": "unsupported",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
       "items": []
     },
     {
@@ -1235,7 +1180,7 @@
       "note": "공식 사이트에 신메뉴 표시와 등록일이 없어요. 메뉴마다 붙는 등록 번호가 큰(최근 등록된) 순서로 12개를 '신메뉴로 추정'해서 보여줘요. 실제와 다를 수 있어요.",
       "status": "error",
       "error": "컴포즈 메뉴 페이지를 하나도 읽지 못했어요",
-      "checkedAt": "2026-11-27T03:33:43.290Z",
+      "checkedAt": "2026-11-27T16:24:55.053Z",
       "lastOk": "2026-11-26T07:44:23.423Z",
       "items": [
         {
