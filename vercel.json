@@ -3,6 +3,7 @@
     { "source": "/mvp", "destination": "/mvp/", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/intro", "destination": "/intro.html" },
     { "source": "/mvp/", "destination": "/local-web/public/index.html" },
     { "source": "/mvp/app.css", "destination": "/local-web/public/app.css" },
     { "source": "/mvp/app.js", "destination": "/local-web/public/app.js" },
