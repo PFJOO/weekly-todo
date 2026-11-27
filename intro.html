@@ -64,6 +64,20 @@ body {
 
 .wrap { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:16px; }
 
+/* 맨 위 배너 사진 */
+.banner {
+  position:relative; margin:0 0 12px; overflow:hidden;
+  border:2px solid var(--accent); border-radius:var(--radius-lg);
+  aspect-ratio:2.2 / 1; background:var(--card);
+}
+.banner img { display:block; width:100%; height:100%; object-fit:cover; object-position:15% 40%; }
+.banner .cap {
+  position:absolute; left:0; right:0; bottom:0; padding:28px 12px 10px;
+  background:linear-gradient(to top, var(--bg), transparent);
+  font-size:13px; font-weight:bold; color:var(--text);
+}
+@media (max-width:600px) { .banner { aspect-ratio:16 / 11; } }
+
 /* 첫 화면 카드: 캔디케인 줄무늬 */
 .hero {
   background:var(--card); border:2px solid var(--accent); border-radius:var(--radius-lg);
@@ -126,6 +140,11 @@ footer .merry { color:var(--accent); font-size:14px; font-weight:bold; margin-bo
 <div class="lights" aria-hidden="true"></div>
 
 <div class="wrap">
+
+  <div class="banner">
+    <img src="intro-banner.webp" width="960" height="640" alt="눈 내린 저녁, 불빛이 켜진 크리스마스 마켓과 커다란 트리">
+    <div class="cap">🎄 눈 내리는 겨울밤, 따뜻한 한 잔과 함께</div>
+  </div>
 
   <header class="hero">
     <div class="candy" aria-hidden="true"></div>
