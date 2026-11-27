@@ -4,18 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src https: data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https: data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
 <title>프랜차이즈 카페 신메뉴 (내 PC 버전)</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
   <a class="skip" href="#panel">메뉴 목록으로 바로 가기</a>
 
-  <header>
-    <h1><span aria-hidden="true">☕ </span>프랜차이즈 카페 신메뉴</h1>
-    <p class="hint">카페를 눌러 신메뉴를 확인하세요.</p>
-    <p class="sub" id="updated">불러오는 중...</p>
-    <p class="web-only" hidden><a href="/intro">🎄 서비스 소개서 보기</a></p>
+  <div class="snow" aria-hidden="true"></div>
+  <div class="lights" aria-hidden="true"></div>
+  <div class="xmas-banner web-only" hidden aria-hidden="true"><span class="cap">🎄 눈 내리는 겨울밤, 따뜻한 한 잔과 함께</span></div>
+
+  <header class="hero">
+    <div class="candy" aria-hidden="true"></div>
+    <div class="inner">
+      <p class="eyebrow" aria-hidden="true">🎄 CHRISTMAS CAFE EDITION</p>
+      <h1><span aria-hidden="true">☕ </span>프랜차이즈 카페 신메뉴</h1>
+      <p class="hint">카페를 눌러 신메뉴를 확인하세요.</p>
+      <p class="sub" id="updated">불러오는 중...</p>
+      <p class="web-only" hidden><a href="/intro">🎄 서비스 소개서 보기</a></p>
+    </div>
   </header>
 
   <!-- 서버가 꺼졌을 때 등 중요한 안내 (내용이 생기면 스크린리더가 바로 읽어줘요) -->

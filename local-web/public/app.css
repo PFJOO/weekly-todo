@@ -2,29 +2,77 @@
    ★ 여기만 바꾸면 색상이 바뀌어요 (밝은 모드 기준)
    cafe-menu.html 의 색을 바탕으로, 글자 대비(4.5:1 이상)가 충분하도록 조금 진하게 맞췄어요.
    ============================================================ */
+/* 크리스마스 카페 테마 (서비스 소개서 intro.html 과 같은 색): 남색 밤 + 금빛 전구 */
 :root {
-  --bg: #f5f6fa;          /* 페이지 배경색 */
-  --card: #ffffff;        /* 카드 배경색 */
-  --text: #222222;        /* 기본 글자색 */
-  --muted: #5f6470;       /* 흐린 글자색 */
-  --line: #d4d7de;        /* 테두리 색 */
-  --accent: #3b5bdb;      /* 포인트 색 (선택·버튼) */
-  --on-accent: #ffffff;   /* 포인트 색 위의 글자색 */
-  --new: #c92a2f;         /* NEW 표시 색 */
-  --on-new: #ffffff;
-  --warn: #8a5700;        /* 추정·주의 표시 색 */
-  --on-warn: #ffffff;
-  --ok: #1a7f37;          /* 성공 표시 색 */
-  --pic: #e6e8ee;         /* 사진 자리 배경 */
+  --bg: #14233f;          /* 페이지 배경색 (깊은 남색) */
+  --card: #1d3157;        /* 카드 배경색 */
+  --text: #f4f1ea;        /* 기본 글자색 (따뜻한 크림색) */
+  --muted: #a9b8d6;       /* 흐린 글자색 */
+  --line: #34507f;        /* 테두리 색 */
+  --accent: #ffb347;      /* 포인트 색 (금빛 전구) */
+  --on-accent: #14233f;   /* 포인트 색 위의 글자색 */
+  --new: #ff8a7a;         /* NEW 표시 색 (산호빛 빨강) */
+  --on-new: #14233f;
+  --warn: #ffc766;        /* 추정·주의 표시 색 */
+  --on-warn: #14233f;
+  --ok: #7fd6a0;          /* 성공 표시 색 (민트 그린) */
+  --pic: #243a66;         /* 사진 자리 배경 */
+  --snow: #ffffff;
+  --candy-red: #d94a4a; --candy-white: #f4f1ea;
+  --light-1: #ff8a7a; --light-2: #ffc766; --light-3: #7fd6a0; --light-4: #8fb4ff;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15171c; --card: #20232b; --text: #eeeeee;
-    --muted: #a8adb8; --line: #3a3f4b; --accent: #7b93ff; --on-accent: #0c1030;
-    --new: #ff6b70; --on-new: #2a0a0c; --warn: #f0b030; --on-warn: #1e1500;
-    --ok: #4cc38a; --pic: #2b2f39;
-  }
+:root { color-scheme: dark; }
+
+/* 내리는 눈 · 전구 줄 · 배너 · 제목 카드 (장식이라 클릭·글자 읽기에 영향 없어요) */
+.snow { position: fixed; inset: 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.snow::before, .snow::after { content: ""; position: absolute; inset: 0; }
+.snow::before {
+  background-image:
+    radial-gradient(circle at 20px 30px, var(--snow) 0 2px, transparent 3px),
+    radial-gradient(circle at 90px 120px, var(--snow) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 160px 60px, var(--snow) 0 2px, transparent 3px),
+    radial-gradient(circle at 210px 190px, var(--snow) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 50px 200px, var(--snow) 0 2px, transparent 3px);
+  background-size: 240px 240px; opacity: .7; animation: fall 14s linear infinite;
 }
+.snow::after {
+  background-image:
+    radial-gradient(circle at 40px 70px, var(--snow) 0 3px, transparent 4px),
+    radial-gradient(circle at 150px 20px, var(--snow) 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 110px 150px, var(--snow) 0 3px, transparent 4px);
+  background-size: 180px 180px; opacity: .5; animation: fall 9s linear infinite;
+}
+@keyframes fall { to { background-position: 0 240px; } }
+
+.lights {
+  height: 22px; margin: -16px -16px 12px; border-bottom: 2px solid var(--line);
+  background-image:
+    radial-gradient(circle at 12px 11px, var(--light-1) 0 5px, transparent 6px),
+    radial-gradient(circle at 36px 11px, var(--light-2) 0 5px, transparent 6px),
+    radial-gradient(circle at 60px 11px, var(--light-3) 0 5px, transparent 6px),
+    radial-gradient(circle at 84px 11px, var(--light-4) 0 5px, transparent 6px);
+  background-size: 96px 22px; animation: twinkle 2.4s ease-in-out infinite;
+}
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .snow::before, .snow::after, .lights { animation: none; } }
+
+/* 맨 위 배너 사진 (인터넷 버전에서만 보여요. 사진이 없으면 남색 배경만 보여요) */
+.xmas-banner {
+  position: relative; margin: 0 0 12px; overflow: hidden; aspect-ratio: 3 / 1;
+  border: 2px solid var(--accent); border-radius: 10px; background: var(--card) url("/intro-banner.webp") 15% 40% / cover no-repeat;
+}
+.xmas-banner .cap {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 28px 12px 8px;
+  background: linear-gradient(to top, var(--bg), transparent); font-size: 13px; font-weight: bold;
+}
+@media (max-width: 600px) { .xmas-banner { aspect-ratio: 16 / 9; } }
+
+/* 제목 카드: 위쪽에 캔디케인 줄무늬 */
+.hero { background: var(--card); border: 2px solid var(--accent); border-radius: 10px; overflow: hidden; margin-bottom: 12px; text-align: center; }
+.candy { height: 10px; background: repeating-linear-gradient(135deg, var(--candy-red) 0 10px, var(--candy-white) 10px 20px); }
+.hero .inner { padding: 12px 12px 4px; }
+.eyebrow { margin: 0 0 4px; color: var(--accent); font-size: 12px; font-weight: bold; letter-spacing: .12em; }
+.hero .sub { margin-bottom: 8px; }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -151,6 +199,7 @@ a.btn { color: var(--on-accent); }
 
 @media (max-width: 480px) {
   body { padding: 12px; }
+  .lights { margin: -12px -12px 12px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   h1 { font-size: 20px; }
   .timer { font-size: 13px; }
